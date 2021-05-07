@@ -1,0 +1,149 @@
+---
+title: "Phylogenies and Phenotypic Plasticity"
+output: html_document
+---
+I am interested in how ecological traits effect diversification and how elevation effects plasticity. Additionally, I am interested in examining how sample size effects the amount of intraspecific variation (i.e. phenotypic plasticity) represented in tips and how sample size effects the evolutionary rates in BM models. Data from type specimens or samples from various populations are often averaged to characterize discrete or continuous traits. However small sample sizes can not capture phenotypic variability within a species that are driven by differences in abiotic and biotic conditions across the species range. James Organ's salamander dataset includes body size measurements from over 12,000 salamanders (7,000 adults) from six elevational transects along Whitetop Mountain and Mt Rogers in the Balsam Mountians of Virginia. This extensive dataset from indivudals all within a small geographic area provides an interesting opportunity to see 1) how sample size effects recorded plasticity/variability for a species and 2) how evolutionary rates change across populations and elevations. 
+
+Getting Data and Pruning Tree
+```{r}
+source("~/Desktop/Phylomethods/Phylo_Final_Project/R/packages.R")  
+source("~/Desktop/Phylomethods/Phylo_Final_Project/R/functions.R")
+source("~/Desktop/Phylomethods/Phylo_Final_Project/data/tree_and_data.R") 
+
+#Data= salamander
+#Tree= tre
+pruned_tree <- PruneTree(tre, salamander)
+VisualizeData(pruned_tree, salamander)
+```
+
+Setting elevations intervals in order to get a plasticity measure for each species at increasing elevations. All samples were subsetted by elevation into three "populations": High, Mid, High. The elevation ranges for each "population" were chosen so as to evenly distribute samples amongst the three groups. In the future, it would liekly be ideal to proportionally devide each species, because some species have more narrow elevational ranges and may be unevenly represented by the current methods. 
+```{r cars}
+#Set.Elevation.Interval.Group(salamander)
+
+salamander$elev.class<- c()
+for (i in seq_along(salamander$Genus)){
+  if(salamander$Elevation[i] <= 3900) {salamander$elev.class[i] <- "High"} else {
+    if(salamander$Elevation[i] > 3900 & salamander$Elevation[i] <= 4500){salamander$elev.class[i] <-"Mid"} else 
+      if(salamander$Elevation[i] > 4500){salamander$elev.class[i] <- "High"} 
+      }
+    }
+  
+  
+salamander$elev
+unique(salamander$elev)
+table(salamander$elv)
+table(salamander$elev,salamander$Genus)
+
+
+str(salamander)
+elev.class <- as.factor(salamander$elev.class)
+High.Sals <- salamander[which(salamander$elev.class == c("High")),]; dim(High.Sals)
+Mid.Sals <- salamander[which(salamander$elev.class == c("Mid")),]; dim(Mid.Sals)
+High.Sals <- salamander[which(salamander$elev.class == c("High")),]; dim(High.Sals)
+
+
+```
+
+##
+Now each salamander entry has been assigned to a High, Mid, or High population. BeHigh is a comparison of the mean and standard deviation of SVL (snout-vent-length) of each species within each population. The idea is to compare intraspecific differences across the High, Mid, and High populations and then see if there are similar trends across species. 
+```{r}
+Low.Pops <- Mean.SD.Species(Low.Sals)
+  colnames(Low.Pops)[2] <- "SD.Low"
+  colnames(Low.Pops)[3] <- "SVL.Low"
+  Low.Pops<- Low.Pops[1:12,]
+Mid.Pops <- Mean.SD.Species(Mid.Sals)
+  colnames(Mid.Pops)[2] <- "SD.Mid"
+  colnames(Mid.Pops)[3] <- "SVL.Mid"
+  Mid.Pops<- Mid.Pops[1:12,]
+High.Pops <- Mean.SD.Species(High.Sals)
+  colnames(High.Pops)[2] <- "SD.High"
+  colnames(High.Pops)[3] <- "SVL.High"
+  
+Intra.comparison <- cbind(Low.Pops, Mid.Pops[,2], Mid.Pops[,3], High.Pops[,2], High.Pops[,3])
+  colnames(Intra.comparison)[4] <- "SD.Mid"
+  colnames(Intra.comparison)[5] <- "SVL.Mid"
+  colnames(Intra.comparison)[6] <- "SD.High"
+  colnames(Intra.comparison)[7] <- "SVL.Mid"
+```
+
+BM model to examine continuous variable of SVL 
+```{r}
+############ Low Elevation Populations #################
+
+Low.Pops.sd <- Low.Pops[,1:2]
+
+pruned_tree.Low.elev <- PruneTree(tre, Low.Pops.sd)
+VisualizeData(pruned_tree.Low.elev, Low.Pops.sd)
+
+str(Low.Pops.sd)
+new<- as.data.frame(names = row.names(Low.Pops.sd), Low.Pops.sd)
+test <- as.vector(Low.Pops.sd)
+str(test)
+length(test)
+length(pruned_tree.Low.elev$tip.label)
+
+phytools::contMap(pruned_tree.Low.elev, elev.avg[,1])
+
+BM1.Low <- geiger::fitContinuous(pruned_tree.Low.elev, Low.Pops.sd, model="BM") 
+print(BM1)
+
+
+############ Mid Elevation Populations #################
+
+Mid.Pops.sd <- Mid.Pops[,1:2]
+
+pruned_tree.Mid.elev <- PruneTree(tre, Mid.Pops.sd)
+VisualizeData(pruned_tree.Mid.elev, Mid.Pops.sd)
+
+str(Mid.Pops.sd)
+new<- as.data.frame(names = row.names(Mid.Pops.sd), Mid.Pops.sd)
+test <- as.vector(Mid.Pops.sd)
+str(test)
+length(test)
+length(pruned_tree.Mid.elev$tip.label)
+
+phytools::contMap(pruned_tree.Mid.elev, elev.avg[,1])
+
+BM1.Mid <- geiger::fitContinuous(pruned_tree.Mid.elev, Mid.Pops.sd, model="BM") 
+print(BM1)
+
+
+
+
+############ High Elevation Populations #################
+
+High.Pops.sd <- High.Pops[,1:2]
+
+pruned_tree.High.elev <- PruneTree(tre, High.Pops.sd)
+VisualizeData(pruned_tree.High.elev, High.Pops.sd)
+
+str(High.Pops.sd)
+new<- as.data.frame(names = row.names(High.Pops.sd), High.Pops.sd)
+test <- as.vector(High.Pops.sd)
+str(test)
+length(test)
+length(pruned_tree.High.elev$tip.label)
+
+phytools::contMap(pruned_tree.High.elev, elev.avg[,1])
+
+BM1.High <- geiger::fitContinuous(pruned_tree.High.elev, High.Pops.sd, model="BM") 
+print(BM1)
+
+```
+
+Subsetting random samples from each elevation. Work in progress. 
+```{r}
+Get.subset.sal <- function (data){
+  if (sals.dat[which(sals.dat$Sex=='female')]){
+    female <- sample(1:nrow(sals.dat.size.female$SVL), 5, replace = FALSE)
+  }
+  sal.sub <- subset(sals.dat,Sex=='female', select = SVL)
+  summary(sals.sub[,1:7]) 
+  sub <- sample(1:nrow(sals.dat.size.female$SVL), 5, replace = FALSE)
+  sub
+
+
+
+
+
+
