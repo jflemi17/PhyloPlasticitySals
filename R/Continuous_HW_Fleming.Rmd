@@ -14,11 +14,10 @@ Now get the tree and data. For these exercises, knowing uncertainty in your meas
 ```{r}
 
 pruned_tree <- PruneTree(tre,sal.data2)
-elevation <- saldata.2[ , c("gen2", "Elevation")]
+elevation <- sal.data2[ , c("gen2", "Elevation")]
 #elevation<- na.omit(elevation$Elevation)
 #elevation<- elevation[!is.na(elevation)]
 #View(elevation)
-
 
 
 
@@ -35,6 +34,7 @@ for (i in 1:length(unique(elevation$gen2))) {
  
 
 elev.avg
+class(elev.avg)
 
 
 ```
@@ -62,6 +62,9 @@ pruned_tree$tip.label
 First, start basic. What is the rate of evolution of your trait on the tree?
 ```{r}
 BM1 <- geiger::fitContinuous(pruned_tree, elev.avg, model="BM")
+print(BM1)
+
+#rate of evolution is 4196.195339 in 2641242.236208 units of time
 ```
 
 Important: What are the rates of evolution? In what units?
