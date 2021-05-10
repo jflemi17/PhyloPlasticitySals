@@ -19,6 +19,7 @@ sals.dat<-sals.dat[!(sals.dat$gen2=="Desmognathus_ochrophaeus"),]
 
 unique(sals.dat$Genus)
 
+str(sals.dat)
 
 PruneTree <- function( phy, data){
   tk <- which(phy$tip.label%in%data[,22]=='TRUE')
