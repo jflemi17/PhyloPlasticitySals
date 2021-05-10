@@ -1,0 +1,87 @@
+---
+title: "Discrete Trees"
+output: html_document
+---
+Body size in Salamanders. Extract and trim discrete data. 
+
+```{r}
+source("~/Desktop/Phylomethods/PhyloPlasticitySals/R/packages.R")  # loads packages
+source("~/Desktop/Phylomethods/PhyloPlasticitySals/R/functions.R") # defines the create_plot() function
+source("~/Desktop/Phylomethods/PhyloPlasticitySals/data/tree_and_data.R") # clean data 
+
+
+pruned_tree <- PruneTree(tre,sal.data2)
+avg.size <- male.female.avg.size(sal.data2)
+size.class <- Size.Class.Female(avg.size)
+
+all.discrete<- cbind(avg.size[,1], size.class)
+
+
+```
+
+Eyeball-check of the data 
+```{r}
+
+VisualizeData(phy=pruned_tree, data = all.discrete)
+
+```
+
+
+```{r}
+#View(all.discrete)
+levels(all.discrete) <- c('Large','Small')
+cleaned.discrete.phyDat <- phangorn::phyDat(all.discrete, type="USER", levels = levels(all.discrete))
+anc.p <- phangorn::ancestral.pars(pruned_tree, cleaned.discrete.phyDat)
+plotAnc(pruned_tree, anc.p, 1)
+
+
+##Do you see uncertianty? Yes some of the nodes contain split character traits (i.e. red/blue)
+
+```
+
+Likelihood estimates
+```{r}
+anc.ml <- ancestral.pml(pml(pruned_tree, cleaned.discrete.phyDat), type="ml")
+summary(anc.ml)
+
+plotAnc(pruned_tree, anc.ml, 1)
+```
+
+How does this differ from parsimony?
+#Parsimony selects the simplest explanation (fewest number of state changes) to explain the observed data. 
+
+Why does it differ from parsimony?
+# The likelihood estimates rely more on character states of the tips (Large/Small) as opposed to the likelihood of each branch. 
+
+What does uncertainty mean?
+# There is uncertaininty regarding the scoring of characters at the tips and internal nodes. 
+
+Now, to the biological questions. For many of these, corHMM will be a useful package. Do the following analyses:
+
+How can you estimate transition rates between states? Do it.
+How could you examine if transition rates are equal? 
+Think about the Lewis (2001) MKV model. Are your traits all variable? Will using this make sense for your data? Try using it. Do results change?
+
+```{r}
+
+mod1<-fitDiscrete(pruned_tree, size.class, model = 'ER')
+size_class2<-as.numeric(size_class)
+is.rooted(pruned_tree)
+tree<-unroot(pruned_tree)
+is.rooted(tree)
+mod2<-lewisMkv(tree, size_class2)
+
+```
+
+
+How could you test order of state evolution?
+
+####How can you estimate transition rates between states ? By using the fitdiscrete function in geiger(## we can do that by fitting a  model with different backward & forward rates
+
+```{r}
+
+ard.mod<-fitDiscrete(pruned_tree, size.class, model = 'ARD')
+print(ard.mod)
+
+````
+
